@@ -1,0 +1,275 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-10-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+Central Limit Theorem emphasizes that the sample mean convergences to population mean as the sample size n is large enough.
+
+a) Write an R function which takes sample x and plots the cumulative sample means. Note that the cumulative means are given by a vector of size n including: the mean of the first observation, the mean of the first two observations, .... and finally the mean of the n observations.
+
+```{r}
+cumulative <- function(x){
+  x <- c(mean(x[1]), mean(x[1:2]), mean(x))
+  print(x)
+  plot(x)
+}
+```
+
+b) Generate n = 1000 observations with replacement from ‘rivers‘ data set.
+
+```{r}
+n <- sample(rivers, 1000, replace = TRUE)
+```
+
+c) Apply your function from part (a) to the data of part (b).
+
+```{r}
+cumulative(n)
+```
+
+d) Show the population mean (the mean of the ‘rivers‘ data set) in your plot in part (c). What do you observe in your plot? Can you intuitively argue how many samples one requires for the convergence of the sample mean? If needed, increase the sample size n.
+
+```{r}
+aux <- c(mean(n[1]), mean(n[1:2]), mean(n), mean(rivers))
+aux
+plot (aux)
+```
+
+I can see in the plot that the original population's mean is different than the sample of 1000. I believe this is because the population is much smaller than the sample and each river can appear seven times, and since it is random, there can be many variations. I believe that having a sample that covers 90% of the population without repeating can have better results.
+
+## Question 2
+The airquality data set reports the daily air quality measurements in New York, May to September 1973.
+The data set includes 153 observations and 6 variables.
+
+a) In regression analysis, the coefficients of the regression model
+y = β1x1 + . . . + βpxp, (1)
+are estimated by
+̂
+β = (X>X)−1 X>y (2)
+where X is n × p design matrix (i.e., n observations with p columns) and y is the response vector of
+size n.
+
+a) Let ‘Ozone‘ be the response variable and design matrix includes ‘Solar.R, Wind, Temp‘ variables where
+p = 3. First normalize all the variables including the explanatory variables and response variable. The
+normalized version of variable x is computed by
+zx = x −  ̄x
+σx
+,
+where  ̄x and σx denote the mean and standard deviation of x, respectively.
+
+```{r}
+normalizeColumn <- function(c) {
+  normalized <- (c - mean(c, na.rm = TRUE)) / sd(c, na.rm = TRUE)
+  return(normalized)
+}
+
+airquality_cleaned <- na.omit(airquality)
+airquality_selected_columns <- airquality_cleaned[, c("Ozone", "Solar.R", "Wind", "Temp")]
+print("Not normalized:")
+airquality_selected_columns
+selected_columns_normalized <- as.data.frame(lapply(airquality_selected_columns, normalizeColumn))
+
+print("Normalized and cleaned:")
+selected_columns_normalized
+```
+
+
+c) Consider the response and three explanatory variables from part (a). Display the box plot of the
+variables separably. Then explain which measure (mean vs median) should be used to describe the
+center of the variables.
+
+```{r}
+boxplot(selected_columns_normalized$Ozone)
+boxplot(selected_columns_normalized$Solar.R)
+boxplot(selected_columns_normalized$Wind)
+boxplot(selected_columns_normalized$Temp)
+```
+
+Answer: For Ozone and Wind, I think that is better to use the median to describe the center, since they have outliers and the box is not symmetric. In the other hand, Solar and Temp are more symmetric and it's a better idea to use the mean as the center.
+
+## Question 3
+
+Create a data frame, called student.list. The data frame has three variables (columns). These variables include major, midterm, final. [10 points] 
+
+a) Take a sample of size n = 18 with replacement from the following list and assign them to the first column of your data set. The list includes Mathematics, Statistics, Computer Science, Management, Physics, Engineering.
+b) Take a sample of size n = 18 from (0, 20) and assign the numbers to the midterm variable. 
+c) Take a sample of size n = 18 from (0, 50) and assign the numbers to the final variable. 
+```{r}
+courses = c('Mathematics', 'Statistics', 'Computer Science', 'Management', 'Physics', 'Engineering')
+majors <- sample(courses, 18, replace = TRUE)
+
+midterms <- sample(0:20, 18, replace = TRUE)
+
+finals <- sample(0:50, 18, replace = TRUE)
+
+student.list <- data.frame(
+  row.names = c("S1", "S2","S3","S4","S5","S6","S7","S8","S9","S10","S11","S12","S13","S14","S15","S16","S17","S18"),
+  major = majors,
+  midterm = midterms,
+  final = finals,
+  stringsAsFactors = FALSE
+)
+student.list
+```
+
+d) Write an R script which returns the list of student(s) with either the highest midterm grade or final grade. 
+```{r}
+highest.midterm <- max(student.list$midterm)
+highest.final <- max(student.list$final)
+highest.midterm
+highest.final
+highest.students <- student.list[student.list$midterm == highest.midterm | student.list$final == highest.final, ]
+highest.students
+
+```
+
+e) Compute the midterm grade mean for students whose final grade is greater than or equal to 30.
+```{r}
+students.higher.30 <- student.list[student.list$final >= 30,]
+students.higher.30
+mean(students.higher.30$midterm)
+
+```
+## Question 4
+a) Write an R function which takes a data set ‘data‘ and rearrange the data set based on a given variable/
+column of the data set ‘x‘; that is the output of the function is the data set whose first row corresponds
+to the observation with maximum ‘x‘ value and the last row corresponds to the observation with
+minimum ‘x‘ value.
+
+```{r}
+question_4 <- function(data, x) {
+  ordered_list <- data[order(data[, x], decreasing = TRUE), ]
+  return(ordered_list)
+}
+
+```
+
+b) Apply the ‘student.list‘ data set from Question 3 to your function from part (a) and rearrange the data
+set based on final variable.
+
+```{r}
+new_list <- question_4(student.list, "final")
+new_list
+```
+## Question 5
+Write an R function which takes a data set ‘data‘ and returns a list of several features about the input
+data set. These features include ‘name=‘ the name of columns of the data set, ‘measures‘ = the mean
+and standard deviation of each column as a matrix with two rows, ‘pooled mean‘= computes the pooled
+mean, ‘pooled varaiance=‘ computes the pooled variance of the data set.
+```{r}
+question_5 <- function(data){
+  columns_names <- colnames(data)
+  speed_mean <- mean(data[[1]])
+  dist_mean <- mean(data[[2]])
+  speed_sd <- sd(data[[1]])
+  dist_sd <- sd(data[[2]])
+  mesures_matrix <- matrix(c(speed_mean, dist_mean, speed_sd, dist_sd), nrow=2, byrow = TRUE)
+  length1 <- length(data[[1]])
+  length2 <- length(data[[2]])
+  pooled_mean = (length1 * speed_mean + length2* dist_mean) / (length1 + length2)
+  pooled_variance = ((length1 - 1) * speed_sd + (length2 - 1) * dist_sd) / (length1 + length2 - 2)
+  named.list <- list(
+    name= columns_names, mesures = mesures_matrix, "pooled mean"= pooled_mean, "pooled variance"= pooled_variance
+  )
+  return(named.list)
+}
+```
+b) Apply your function to the ‘cars‘ data set. [10 points]
+```{r}
+question_5(cars)
+```
+## Question 6
+In this questions, we plan to learn an introduction to the cross-validation idea. Consider the estimation of
+the coefficients of the regression in Question 2.[10 points]
+a) Take a sample of size 100 observations from the ‘airquality‘ data set. Consider this data set henceforth
+your population. Similar to Question 2, consider the ‘Ozone‘ as your response and your design matrix
+includes ‘Solar.R, Wind, Temp‘ variables. Divide the population into 5 folds, each of size 20 observations.
+Note that the folds are mutually exclusive such that there is no common observation between them.
+
+```{r}
+airquality_question6 <- airquality[, c("Solar.R", "Wind", "Temp")]
+response <- airquality[, c("Ozone")]
+folds <- split(airquality_question6, rep(1:5, each = 20))
+
+```
+
+b) Write an R script such that it iteratively sets 4 folds for training (i.e, estimating the coefficients) and 1
+fold for testing (predicting the response). Use the four folds to estimate the coefficients of the regression
+from (2) and obtain ̂ β. Then predict the response value of test data by
+̂
+y = ̂ βxnew
+where xnew is the covariates of the test fold ̂ y denotes the predicted responses of the test fold. Change
+the test and training folds iteratively and repeat the above procedure such that you obtain the predicted
+responses for all the 5 folds.
+
+## Question 7
+Recall the variable letters (it is already defined in R base).
+a) Generate a random vector Z of 6607 letters (from ‘a‘ to ‘z‘). Print a summary of Z in the form of a
+frequency table.
+```{r}
+z <- sample(letters, 6607, replace = TRUE)
+table(z)
+```
+b) Print the list of letters that appear on odd number of times in Z.
+```{r}
+zvec <- c(table(z))
+zvec <- zvec[zvec %% 2 == 1]
+zvec
+```
+## Question 8
+a) Create matrix Y of dimensions 6 × 6 from an normal distribution with mean 10 and standard deviation
+of 3.
+```{r}
+Y <- matrix( rnorm(6*6, mean = 10, sd = 3), nrow=6 , ncol= 6,byrow = FALSE)
+Y
+```
+b) Compute the inverse of Y .
+```{r}
+Yi <- solve(Y)
+Yi
+```
+
+
+## Question 9
+Find all numbers between 1001 to 6601 that are divisible by 7, 11 but not 5 and print them.
+```{r}
+numbers_9 <- c(1001:6601)
+numbers_9_divisible <- numbers_9[numbers_9 %% 7 == 0 & numbers_9 %% 11 == 0 & numbers_9 %% 5 == 1]
+numbers_9_divisible
+```
+## Question 10
+Write an R script which simulates tossing an unfair coin where the probability of head is 0.73. Toss the coin
+256 times and compute
+```{r}
+toss_coin <- function(){
+  coin <- sample(1:100, 1, replace= FALSE)
+  aux = 0;
+  if(coin>73){
+    print("Tails")
+  }else{
+    print("Head")
+    aux = 1
+  }
+  return(aux)
+}
+
+total_heads = 0
+for (i in 1:256) {
+  total_heads = total_heads + toss_coin()
+}
+
+print("Total of heads:")
+total_heads
+print("Total of tails:")
+256 - total_heads
+print("% of heads:")
+(total_heads*100)/256
+```
